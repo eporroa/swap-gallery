@@ -1,0 +1,119 @@
+<App Background="#CCCCCC">
+  <Fuse.iOS.StatusBarConfig Style="Dark" />
+  <JavaScript>
+  var Pictures = require('PictureList');
+  var Observable = require("FuseJS/Observable");
+  var resetting = Observable(false);
+
+  function reset(x) {
+      resetting.value = true;
+      setTimeout(backToNormal, 300);
+    }
+
+  function backToNormal() {
+    resetting.value = false;
+  }
+
+  module.exports = {
+    pics : Pictures.getList(),
+    visited: function(x)
+    {
+      debug_log("Visited ");
+    },
+    notVisited: function(x)
+    {
+      debug_log("Not visited ");
+    },
+    addVisitor: function(x)
+    {
+      debug_log("addVisitor");
+    },
+    removeVisitor: function(x)
+    {
+      debug_log("removeVisitor");
+    },
+    addNonVisitor: function(x)
+    {
+      debug_log("addNonVisitor");
+    },
+    removeNonVisitor: function(x) {
+      debug_log("removeNonVisitor");
+    },
+    reset: reset,
+    resetting: resetting
+  };
+
+  reset();
+  </JavaScript>
+  <Grid Rows="1*,6*,1*" Color="#000">
+    <Panel>
+      <Text>OLAKEASE1</Text>
+    </Panel>
+
+    <Panel>
+      <Each Items="{pics}">
+      <Panel Height="100%" Width="100%">
+        <Panel>
+            <DockPanel Margin="0" Height="90%" Width="90%">
+              <Grid Dock="Top">
+                <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
+              </Grid>
+            </DockPanel>
+            <Panel Margin="0" Width="100%" Height="100%">
+              <DropShadow ux:Name="shadow" Distance="0" Size="2" />
+            </Panel>
+            <InForceFieldAnimation ForceField="visitedAttractor" From="0.1" To="0.3">
+            </InForceFieldAnimation>
+
+            <InForceFieldAnimation ForceField="visitedAttractor">
+              <Rotate Degrees="-8" />
+            </InForceFieldAnimation>
+
+            <InForceFieldAnimation ForceField="notVisitedAttractor" From="0.1" To="0.3">
+            </InForceFieldAnimation>
+
+            <InForceFieldAnimation ForceField="notVisitedAttractor">
+              <Rotate Degrees="8" />
+            </InForceFieldAnimation>
+
+            <EnteredForceField ForceField="visitedAttractor" Threshold="0.9" Handler="{visited}" />
+            <EnteredForceField ForceField="notVisitedAttractor" Threshold="0.9" Handler="{notVisited}" />
+
+            <EnteredForceField ForceField="visitedAttractor" Threshold="0.05" Handler="{addVisitor}" />
+            <ExitedForceField ForceField="visitedAttractor" Threshold="0.05" Handler="{removeVisitor}" />
+            <EnteredForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{addNonVisitor}" />
+            <ExitedForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{removeNonVisitor}" />
+
+            <Draggable />
+            <WhileDragging>
+              <BringToFront />
+              <Scale Factor="1.1" Duration="0.5" Easing="BackOut" />
+              <Change shadow.Distance="20" Duration="0.5" Easing="BackOut" />
+              <Change shadow.Size="20" Duration="0.5" Easing="BackOut" />
+            </WhileDragging>
+
+        </Panel>
+      </Panel>  
+      </Each>
+        
+      <PointAttractor ux:Name="centerAttractor" Radius="800" Strength="250" />
+      <PointAttractor ux:Name="notVisitedAttractor" Offset="-450,0,0" Radius="380" Strength="600" />
+      <PointAttractor ux:Name="visitedAttractor" Offset="450,0,0" Radius="380" Strength="600" />
+
+      <WhileTrue Value="{resetting}">
+        <Change centerAttractor.Radius="8000" />
+        <Change centerAttractor.Strength="10000" />
+      </WhileTrue>
+    </Panel>
+  
+    <StackPanel Alignment="Center" ItemSpacing="20" Orientation="Horizontal">
+      <Panel MaxWidth="100">
+        <Image File="resources/interface/Dislike.png" StretchMode="UniformToFill" ux:Name="dislikePic" />
+      </Panel>
+      <Panel MaxWidth="100">
+        <Image File="resources/interface/Like.png" StretchMode="UniformToFill" ux:Name="likePic" />
+      </Panel>
+    </StackPanel>
+  </Grid>
+  
+</App>

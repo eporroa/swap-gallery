@@ -1,0 +1,20 @@
+{
+  "RootNamespace":"",
+  "Packages": [
+  	"Fuse",
+  	"FuseJS",
+    "Fuse.Entities",
+    "Fuse.Gestures",
+    "Fuse.Animations",
+    "Fuse.Physics"
+  ],
+  "Mobile": {
+  	"Orientations": "Portrait"
+  },
+  "Includes": [
+    "*",
+    "*.js:Bundle",
+    "resources/*.jpg:Bundle",
+    "resources/interface/*.jpg:Bundle"
+  ]
+}
