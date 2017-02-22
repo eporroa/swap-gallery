@@ -1,117 +1,163 @@
 <App Background="#CCCCCC">
   <Fuse.iOS.StatusBarConfig Style="Dark" />
+  <Font File="resources/fonts/computer_pixel.ttf" ux:Global="ComputerPixel" />
+
   <JavaScript>
   var Pictures = require('PictureList');
   var Observable = require("FuseJS/Observable");
-  var resetting = Observable(false);
+  var RandomPictureSet = Pictures.getList();
+  var PicturesArr = Observable();
+  var currentCounter = 0;
+  var currentPic = null;
+  var Busy = Observable(false);
 
-  function reset(x) {
-      resetting.value = true;
-      setTimeout(backToNormal, 300);
+  function addPics(pic, i){
+    pic.active = false;
+    pic.index = currentCounter;
+    PicturesArr.add(pic);
+    currentCounter = i;
+    PicturesArr.map(function(item, i){
+      if (i === 0) {
+        item.active = true;
+      }
+    })
+  }
+
+  function refreshPics(x){
+    PicturesArr.removeAt(0);
+    setTimeout(function(){
+      var pic = PicturesArr.getAt(0);
+      if(pic) {
+        pic.active = true;
+        pic.liked = false;
+        pic.not_liked = false;
+        PicturesArr.replaceAt(0, pic);
+      }
+    }, 300)
+
+    if (currentCounter <= 2) {
+      RandomPictureSet.splice(0, 3).map(addPics);
+      if (RandomPictureSet.length === 0){
+        debug_log("Finalizado");
+      } else {
+        currentCounter += 3;
+      }
+    } 
+    currentCounter--;
+  }
+
+  function liked(x) {
+    debug_log("liked " + JSON.stringify(x.data));
+    refreshPics(x.data);
+  }
+  function notLiked(x) {
+    debug_log("notLiked " + JSON.stringify(x.data));
+    refreshPics(x.data);
+  }
+
+  function handleLiked() {
+    if (!Busy.value) {
+      var pic = PicturesArr.getAt(0);
+      if (pic) {
+        pic.liked = true;
+        liked({data: pic});
+      }
     }
-
-  function backToNormal() {
-    resetting.value = false;
+  }
+  function handleNotLiked() {
+    if (!Busy.value) {
+      var pic = PicturesArr.getAt(0);
+      if (pic) {
+        pic.not_liked = true;
+        notLiked({data: pic});
+      }
+    }
+  }
+  
+  RandomPictureSet.splice(0, 3).map(addPics);
+  var pic = PicturesArr.getAt(0);
+  if(pic) {
+    pic.active = true;
   }
 
   module.exports = {
-    pics : Pictures.getList(),
-    visited: function(x)
-    {
-      debug_log("Visited ");
-    },
-    notVisited: function(x)
-    {
-      debug_log("Not visited ");
-    },
-    addVisitor: function(x)
-    {
-      debug_log("addVisitor");
-    },
-    removeVisitor: function(x)
-    {
-      debug_log("removeVisitor");
-    },
-    addNonVisitor: function(x)
-    {
-      debug_log("addNonVisitor");
-    },
-    removeNonVisitor: function(x) {
-      debug_log("removeNonVisitor");
-    },
-    reset: reset,
-    resetting: resetting
+    handleLiked,
+    handleNotLiked,
+    liked,
+    notLiked,
+    PicturesArr
   };
 
-  reset();
   </JavaScript>
-  <Grid Rows="1*,6*,1*" Color="#000">
-    <Panel>
-      <Text>OLAKEASE1</Text>
-    </Panel>
+  <Text ux:Class="TituloText" Font="ComputerPixel" Alignment="Center" Color="#BEF0E7" FontSize="45" />
+  <Grid Rows="1*,6*,1*" Color="#FFF">
+    <StackPanel Color="#000" ItemSpacing="-20">
+      <TituloText>Gxndxr</TituloText>
+      <TituloText>Generator</TituloText>
+    </StackPanel>
 
-    <Panel>
-      <Each Items="{pics}">
-      <Panel Height="100%" Width="100%">
-        <Panel>
-            <DockPanel Margin="0" Height="90%" Width="90%">
-              <Grid Dock="Top">
-                <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
-              </Grid>
-            </DockPanel>
-            <Panel Margin="0" Width="100%" Height="100%">
-              <DropShadow ux:Name="shadow" Distance="0" Size="2" />
-            </Panel>
-            <InForceFieldAnimation ForceField="visitedAttractor" From="0.01" To="0.2">
-            </InForceFieldAnimation>
+    <Panel ux:Name="PicsPanelObj">
+      <Each Items="{PicturesArr}">
+        <Panel Height="100%" Width="100%">
+          <Deferred>
+          <Panel>
+              <DockPanel Margin="0" Height="90%" Width="90%">
+                <Rectangle Layer="Background">
+                    <Stroke Width="5" Offset="2" Color="#CCC"/>
+                </Rectangle>
+                <Grid Dock="Top">
+                  <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
+                </Grid>
+              </DockPanel>
 
-            <InForceFieldAnimation ForceField="visitedAttractor">
-              <Rotate Degrees="-8" />
-            </InForceFieldAnimation>
+              <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
+                <Rotate Degrees="-8" />
+              </InForceFieldAnimation>
 
-            <InForceFieldAnimation ForceField="notVisitedAttractor" From="0.01" To="0.2">
-            </InForceFieldAnimation>
+              <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
+                <Rotate Degrees="8" />
+              </InForceFieldAnimation>
 
-            <InForceFieldAnimation ForceField="notVisitedAttractor">
-              <Rotate Degrees="8" />
-            </InForceFieldAnimation>
+              <EnteredForceField ForceField="likedAttractor" Threshold="0.9" Handler="{liked}" />
+              <EnteredForceField ForceField="notLikedAttractor" Threshold="0.9" Handler="{notLiked}" />
 
-            <EnteredForceField ForceField="visitedAttractor" Threshold="0.9" Handler="{visited}" />
-            <EnteredForceField ForceField="notVisitedAttractor" Threshold="0.9" Handler="{notVisited}" />
+              <WhileTrue Value="{active}">
+                <Draggable Axis="X"/>
 
-            <EnteredForceField ForceField="visitedAttractor" Threshold="0.05" Handler="{addVisitor}" />
-            <ExitedForceField ForceField="visitedAttractor" Threshold="0.05" Handler="{removeVisitor}" />
-            <EnteredForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{addNonVisitor}" />
-            <ExitedForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{removeNonVisitor}" />
+                <WhileTrue Value="{liked}">
+                    <Move X="200" Duration="0.6" />
+                </WhileTrue>
+                <WhileTrue Value="{not_liked}">
+                    <Move X="-200" Duration="0.6" />
+                </WhileTrue>
+              </WhileTrue>
 
-            <Draggable Axis="X"/>
-            <WhileDragging>
-              <BringToFront />
-              <Scale Factor="1.1" Duration="0.5" Easing="BackOut" />
-              <Change shadow.Distance="20" Duration="0.5" Easing="BackOut" />
-              <Change shadow.Size="20" Duration="0.5" Easing="BackOut" />
-            </WhileDragging>
-
+              <WhileDragging>
+                <BringToFront />
+                <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
+              </WhileDragging>
+          </Panel>
+          </Deferred>
         </Panel>
-      </Panel>  
       </Each>
         
-      <PointAttractor ux:Name="centerAttractor" Radius="600" Strength="750" />
-      <PointAttractor ux:Name="notVisitedAttractor" Offset="-450,0,0" Radius="480" Strength="900" />
-      <PointAttractor ux:Name="visitedAttractor" Offset="450,0,0" Radius="480" Strength="900" />
-
-      <WhileTrue Value="{resetting}">
-        <Change centerAttractor.Radius="8000" />
-        <Change centerAttractor.Strength="10000" />
-      </WhileTrue>
+      <PointAttractor ux:Name="centerAttractor" Radius="600" Strength="250" />
+      <PointAttractor ux:Name="notLikedAttractor" Offset="-450,0,0" Radius="380" Strength="500" />
+      <PointAttractor ux:Name="likedAttractor" Offset="450,0,0" Radius="380" Strength="500" />
     </Panel>
   
-    <StackPanel Alignment="Center" ItemSpacing="20" Orientation="Horizontal">
+    <StackPanel Alignment="Center" ItemSpacing="60" Orientation="Horizontal" Margin="0,0,0,20">
       <Panel MaxWidth="100">
-        <Image File="resources/interface/Dislike.png" StretchMode="UniformToFill" ux:Name="dislikePic" />
+        <Image ux:Name="dislikePic" File="resources/interface/dislike.jpg" StretchMode="UniformToFill" />
+        <Clicked Handler="{handleNotLiked}">
+          <Scale Factor="1.2" Duration="0.1" Easing="BounceInOut" />
+        </Clicked>
       </Panel>
       <Panel MaxWidth="100">
-        <Image File="resources/interface/Like.png" StretchMode="UniformToFill" ux:Name="likePic" />
+        <Image ux:Name="likePic" File="resources/interface/like.jpg" StretchMode="UniformToFill" />
+        <Clicked Handler="{handleLiked}">
+          <Scale Factor="1.2" Duration="0.1" Easing="BounceInOut" />
+        </Clicked>
       </Panel>
     </StackPanel>
   </Grid>

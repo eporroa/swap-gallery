@@ -15,6 +15,7 @@
     "*",
     "*.js:Bundle",
     "resources/*.jpg:Bundle",
-    "resources/interface/*.jpg:Bundle"
+    "resources/interface/*.jpg:Bundle",
+    "resources/fonts/*.ttf:Bundle"
   ]
 }
