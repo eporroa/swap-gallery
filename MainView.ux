@@ -62,14 +62,14 @@
             <Panel Margin="0" Width="100%" Height="100%">
               <DropShadow ux:Name="shadow" Distance="0" Size="2" />
             </Panel>
-            <InForceFieldAnimation ForceField="visitedAttractor" From="0.1" To="0.3">
+            <InForceFieldAnimation ForceField="visitedAttractor" From="0.01" To="0.2">
             </InForceFieldAnimation>
 
             <InForceFieldAnimation ForceField="visitedAttractor">
               <Rotate Degrees="-8" />
             </InForceFieldAnimation>
 
-            <InForceFieldAnimation ForceField="notVisitedAttractor" From="0.1" To="0.3">
+            <InForceFieldAnimation ForceField="notVisitedAttractor" From="0.01" To="0.2">
             </InForceFieldAnimation>
 
             <InForceFieldAnimation ForceField="notVisitedAttractor">
@@ -84,7 +84,7 @@
             <EnteredForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{addNonVisitor}" />
             <ExitedForceField ForceField="notVisitedAttractor" Threshold="0.05" Handler="{removeNonVisitor}" />
 
-            <Draggable />
+            <Draggable Axis="X"/>
             <WhileDragging>
               <BringToFront />
               <Scale Factor="1.1" Duration="0.5" Easing="BackOut" />
@@ -96,9 +96,9 @@
       </Panel>  
       </Each>
         
-      <PointAttractor ux:Name="centerAttractor" Radius="800" Strength="250" />
-      <PointAttractor ux:Name="notVisitedAttractor" Offset="-450,0,0" Radius="380" Strength="600" />
-      <PointAttractor ux:Name="visitedAttractor" Offset="450,0,0" Radius="380" Strength="600" />
+      <PointAttractor ux:Name="centerAttractor" Radius="600" Strength="750" />
+      <PointAttractor ux:Name="notVisitedAttractor" Offset="-450,0,0" Radius="480" Strength="900" />
+      <PointAttractor ux:Name="visitedAttractor" Offset="450,0,0" Radius="480" Strength="900" />
 
       <WhileTrue Value="{resetting}">
         <Change centerAttractor.Radius="8000" />
