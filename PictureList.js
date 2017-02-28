@@ -95,6 +95,7 @@ function shuffle(array) {
 module.exports = { getList: function randomize(){
   var rand = shuffle(list);
   return rand.filter(function(pic, i){
+    rand[i].index = i;
     return i < 30;
   });
 } };

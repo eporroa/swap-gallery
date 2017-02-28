@@ -5,87 +5,98 @@
   <JavaScript>
   var Pictures = require('PictureList');
   var Observable = require("FuseJS/Observable");
-  var RandomPictureSet = Pictures.getList();
-  var PicturesArr = Observable();
-  var currentCounter = 0;
-  var currentPic = null;
-  var Busy = Observable(false);
+  var RandomCardsSet = Pictures.getList();
+  var CardsArr = Observable();
+  var cardsAvailableLeft = 0;
+  var currentCardIndex = 0;
 
-  function addPics(pic, i){
-    pic.active = false;
-    pic.index = currentCounter;
-    PicturesArr.add(pic);
-    currentCounter = i;
-    PicturesArr.map(function(item, i){
-      if (i === 0) {
-        item.active = true;
-      }
-    })
+  /*CardsArr.onValueChanged(module, function(card){
+    if (!card) return;
+    if(card.index === 0) {
+      card.active = true;
+    }
+  });*/
+
+  function placeCards(quant) {
+    RandomCardsSet.splice(0, quant).map(setUpCards);
+    cardsAvailableLeft = RandomCardsSet.length;
   }
 
-  function refreshPics(x){
-    PicturesArr.removeAt(0);
+  function setUpCards(card){
+    card.active = false;
+    CardsArr.add(card);
+  }
+
+  function refreshCards(x){
+    debug_log("refreshCards: " + JSON.stringify(x));
+    CardsArr.removeAt(0);
     setTimeout(function(){
-      var pic = PicturesArr.getAt(0);
-      if(pic) {
-        pic.active = true;
-        pic.liked = false;
-        pic.not_liked = false;
-        PicturesArr.replaceAt(0, pic);
+      var card = CardsArr.getAt(0);
+      if(card) {
+        card.active = true;
+        card.liked = false;
+        card.not_liked = false;
+        CardsArr.replaceAt(0, card);
       }
     }, 300)
 
-    if (currentCounter <= 2) {
-      RandomPictureSet.splice(0, 3).map(addPics);
-      if (RandomPictureSet.length === 0){
+    /*if (currentCounter <= 2) {
+      RandomCardsSet.splice(0, 3).map(setUpCards);
+      if (RandomCardsSet.length === 0){
         debug_log("Finalizado");
       } else {
         currentCounter += 3;
       }
-    } 
-    currentCounter--;
+    }
+    currentCounter--;*/
   }
-
+/*
   function liked(x) {
-    debug_log("liked " + JSON.stringify(x.data));
-    refreshPics(x.data);
+    debug_log("liked");
+    //debug_log("liked " + JSON.stringify(x.data));
+    //refreshCards(x.data);
   }
   function notLiked(x) {
     debug_log("notLiked " + JSON.stringify(x.data));
-    refreshPics(x.data);
+    refreshCards(x.data);
   }
-
+*/
+function liked() {
+    debug_log("liked");
+  }
+  function notLiked() {
+    debug_log("notLiked");
+  }
   function handleLiked() {
-    if (!Busy.value) {
-      var pic = PicturesArr.getAt(0);
-      if (pic) {
-        pic.liked = true;
-        liked({data: pic});
-      }
+    var pic = CardsArr.getAt(0);
+    if (pic) {
+      pic.liked = true;
+      liked({data: pic});
     }
   }
   function handleNotLiked() {
-    if (!Busy.value) {
-      var pic = PicturesArr.getAt(0);
-      if (pic) {
-        pic.not_liked = true;
-        notLiked({data: pic});
-      }
+    var pic = CardsArr.getAt(0);
+    if (pic) {
+      pic.not_liked = true;
+      notLiked({data: pic});
     }
   }
   
-  RandomPictureSet.splice(0, 3).map(addPics);
-  var pic = PicturesArr.getAt(0);
-  if(pic) {
-    pic.active = true;
+  placeCards(3);
+  var card = CardsArr.getAt(0);
+  if(card) {
+    card.active = true;
+    card.liked = false;
+    card.not_liked = false;
+    CardsArr.replaceAt(0, card);
   }
-
+debug_log("----");
   module.exports = {
     handleLiked,
     handleNotLiked,
     liked,
     notLiked,
-    PicturesArr
+    CardsArr
   };
 
   </JavaScript>
@@ -96,54 +107,62 @@
       <TituloText>Generator</TituloText>
     </StackPanel>
 
-    <Panel ux:Name="PicsPanelObj">
-      <Each Items="{PicturesArr}">
-        <Panel Height="100%" Width="100%">
+    <Panel ux:Name="PicsPanelObj" Color="#FF0">
+      <Each Items="{CardsArr}">
+        <Panel Dock="Top" Height="100%" Width="100%">
           <Deferred>
-          <Panel>
-              <DockPanel Margin="0" Height="90%" Width="90%">
-                <Rectangle Layer="Background">
-                    <Stroke Width="5" Offset="2" Color="#CCC"/>
-                </Rectangle>
-                <Grid Dock="Top">
-                  <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
-                </Grid>
-              </DockPanel>
+            <Panel Alignment="Center">
+                <DockPanel Margin="0" Height="90%" Width="90%">
+                    <Rectangle Layer="Background">
+                        <Stroke Width="5" Offset="2" Color="#CCC"/>
+                    </Rectangle>
+                    <Grid>
+                        <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
+                    </Grid>
+                </DockPanel>
 
-              <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
-                <Rotate Degrees="-8" />
-              </InForceFieldAnimation>
+                <WhileTrue Value="{active}">
+                  <Draggable Axis="X"/>
 
-              <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
-                <Rotate Degrees="8" />
-              </InForceFieldAnimation>
+                  <WhileTrue Value="{liked}">
+                      <Move X="200" Duration="0.6" />
+                  </WhileTrue>
+                  <WhileTrue Value="{not_liked}">
+                      <Move X="-200" Duration="0.6" />
+                  </WhileTrue>
 
-              <EnteredForceField ForceField="likedAttractor" Threshold="0.9" Handler="{liked}" />
-              <EnteredForceField ForceField="notLikedAttractor" Threshold="0.9" Handler="{notLiked}" />
-
-              <WhileTrue Value="{active}">
-                <Draggable Axis="X"/>
-
-                <WhileTrue Value="{liked}">
-                    <Move X="200" Duration="0.6" />
                 </WhileTrue>
-                <WhileTrue Value="{not_liked}">
-                    <Move X="-200" Duration="0.6" />
-                </WhileTrue>
-              </WhileTrue>
 
-              <WhileDragging>
-                <BringToFront />
-                <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
-              </WhileDragging>
-          </Panel>
-          </Deferred>
+                <WhileDragging>
+                  <BringToFront />
+                  <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
+                </WhileDragging>
+
+                <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
+                  <Rotate Degrees="-8" />
+                </InForceFieldAnimation>
+
+                <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
+                  <Rotate Degrees="8" />
+                </InForceFieldAnimation>
+
+                <EnteredForceField ForceField="likedAttractor" Threshold="0.3" Handler="{liked}" />
+                <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
+            </Panel>
+        </Deferred>
         </Panel>
       </Each>
-        
-      <PointAttractor ux:Name="centerAttractor" Radius="600" Strength="250" />
-      <PointAttractor ux:Name="notLikedAttractor" Offset="-450,0,0" Radius="380" Strength="500" />
-      <PointAttractor ux:Name="likedAttractor" Offset="450,0,0" Radius="380" Strength="500" />
+      <Panel Width="200" Height="200" Alignment="Center" >
+          <Circle ux:Name="centerCircle" Color="#EF5350" />
+          <PointAttractor ux:Name="centerAttractor" Radius="150" Strength="500" />
+      </Panel>
+      <Panel Alignment="CenterLeft" Width="50" Height="100%">
+          <PointAttractor ux:Name="notLikedAttractor" Radius="600" Strength="800" Offset="-450,0,0"/>
+      </Panel>
+      <Panel Alignment="CenterRight" Width="50" Height="100%">
+          <Circle ux:Name="leftCircle" Color="#EF5350" />
+          <PointAttractor ux:Name="likedAttractor" Radius="600" Strength="800" Offset="500,0,0"/>
+      </Panel>
     </Panel>
   
     <StackPanel Alignment="Center" ItemSpacing="60" Orientation="Horizontal" Margin="0,0,0,20">
