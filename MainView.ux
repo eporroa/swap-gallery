@@ -6,39 +6,59 @@
   var Pictures = require('PictureList');
   var Observable = require("FuseJS/Observable");
   var RandomCardsSet = Pictures.getList();
-  var CardsArr = Observable();
+  var CardsArr = [];
+  var Cards = Observable();
   var cardsAvailableLeft = 0;
   var currentCardIndex = 0;
 
   /*CardsArr.onValueChanged(module, function(card){
     if (!card) return;
-    if(card.index === 0) {
-      card.active = true;
-    }
+    debug_log("changed " + JSON.stringify(card));
+    //card.active = true;
   });*/
 
   function placeCards(quant) {
     RandomCardsSet.splice(0, quant).map(setUpCards);
+    Cards.replaceAll(CardsArr);
     cardsAvailableLeft = RandomCardsSet.length;
   }
 
   function setUpCards(card){
     card.active = false;
-    CardsArr.add(card);
+    CardsArr.push(card);
   }
 
-  function refreshCards(x){
-    debug_log("refreshCards: " + JSON.stringify(x));
-    CardsArr.removeAt(0);
-    setTimeout(function(){
-      var card = CardsArr.getAt(0);
-      if(card) {
-        card.active = true;
-        card.liked = false;
-        card.not_liked = false;
-        CardsArr.replaceAt(0, card);
+  function refreshCards(card){
+    //CardsArr.removeAt(0);
+    debug_log("refresh: " + JSON.stringify(card));
+
+    Cards.replaceAt(card.index, card)
+    var nextCard = CardsArr[currentCardIndex + 1];
+    if (nextCard) {
+      nextCard.active = true;
+      Cards.replaceAt(nextCard.index, nextCard);
+      currentCardIndex++;
+    }
+
+    debug_log("new: " + JSON.stringify(CardsArr));
+    
+    /*Cards.forEach(function(c, i){
+      debug_log("Cards " + i);
+      c.index = i;
+      if(i === 0) {
+        c.active = true;
       }
-    }, 300)
+      return c;
+    });*/
+    //Cards.replaceAll();
+
+    //var nextCard = Cards.getAt(0);
+    /*if(nextCard) {
+      nextCard.active = true;
+      //Cards.replaceAt(nextCard.index, nextCard);
+      debug_log("new: " + JSON.stringify(Cards.getAt(0)));
+    }*/
+
 
     /*if (currentCounter <= 2) {
       RandomCardsSet.splice(0, 3).map(setUpCards);
@@ -50,53 +70,43 @@
     }
     currentCounter--;*/
   }
-/*
-  function liked(x) {
-    debug_log("liked");
-    //debug_log("liked " + JSON.stringify(x.data));
-    //refreshCards(x.data);
+
+  function isLiked(e) {
+    e.data.liked = true;
+    refreshCards(e.data);
   }
-  function notLiked(x) {
-    debug_log("notLiked " + JSON.stringify(x.data));
-    refreshCards(x.data);
-  }
-*/
-function liked() {
-    debug_log("liked");
-  }
-  function notLiked() {
+
+  function notLiked(e) {
     debug_log("notLiked");
+    e.data.not_liked = true;
+    refreshCards(e.data);
   }
+
   function handleLiked() {
-    var pic = CardsArr.getAt(0);
+    var pic = Cards.getAt(0);
     if (pic) {
       pic.liked = true;
-      liked({data: pic});
+      Cards.replaceAt(0, pic);
     }
   }
+
   function handleNotLiked() {
-    var pic = CardsArr.getAt(0);
+    var pic = Cards.getAt(0);
     if (pic) {
       pic.not_liked = true;
-      notLiked({data: pic});
+      Cards.replaceAt(0, pic);
     }
   }
   
   placeCards(3);
-  var card = CardsArr.getAt(0);
-  if(card) {
-    card.active = true;
-    card.liked = false;
-    card.not_liked = false;
-    CardsArr.replaceAt(0, card);
-  }
+
 debug_log("----");
   module.exports = {
     handleLiked,
     handleNotLiked,
-    liked,
+    isLiked,
     notLiked,
-    CardsArr
+    Cards
   };
 
   </JavaScript>
@@ -107,12 +117,12 @@ debug_log("----");
       <TituloText>Generator</TituloText>
     </StackPanel>
 
-    <Panel ux:Name="PicsPanelObj" Color="#FF0">
-      <Each Items="{CardsArr}">
+    <Panel ux:Name="PicsPanelObj">
+      <Each Items="{Cards}">
         <Panel Dock="Top" Height="100%" Width="100%">
           <Deferred>
             <Panel Alignment="Center">
-                <DockPanel Margin="0" Height="90%" Width="90%">
+                <DockPanel ux:Name="panel" Margin="0" Height="90%" Width="90%">
                     <Rectangle Layer="Background">
                         <Stroke Width="5" Offset="2" Color="#CCC"/>
                     </Rectangle>
@@ -121,16 +131,13 @@ debug_log("----");
                     </Grid>
                 </DockPanel>
 
-                <WhileTrue Value="{active}">
-                  <Draggable Axis="X"/>
+                <Draggable Axis="X"/>
 
-                  <WhileTrue Value="{liked}">
-                      <Move X="200" Duration="0.6" />
-                  </WhileTrue>
-                  <WhileTrue Value="{not_liked}">
-                      <Move X="-200" Duration="0.6" />
-                  </WhileTrue>
-
+                <WhileTrue Value="{liked}">
+                    <Move X="200" Duration="0.3" Easing="QuadraticInOut" />
+                </WhileTrue>
+                <WhileTrue Value="{not_liked}">
+                    <Move X="-200" Duration="0.3" Easing="QuadraticInOut" />
                 </WhileTrue>
 
                 <WhileDragging>
@@ -146,22 +153,21 @@ debug_log("----");
                   <Rotate Degrees="8" />
                 </InForceFieldAnimation>
 
-                <EnteredForceField ForceField="likedAttractor" Threshold="0.3" Handler="{liked}" />
+                <EnteredForceField ForceField="likedAttractor" Threshold="0.8"  Handler="{isLiked}" />
                 <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
             </Panel>
         </Deferred>
         </Panel>
       </Each>
-      <Panel Width="200" Height="200" Alignment="Center" >
-          <Circle ux:Name="centerCircle" Color="#EF5350" />
-          <PointAttractor ux:Name="centerAttractor" Radius="150" Strength="500" />
+
+      <Panel Width="20%" Height="100%" Alignment="CenterLeft">
+          <PointAttractor ux:Name="notLikedAttractor" Radius="350" Strength="800" Offset="-250,0,0"/>
       </Panel>
-      <Panel Alignment="CenterLeft" Width="50" Height="100%">
-          <PointAttractor ux:Name="notLikedAttractor" Radius="600" Strength="800" Offset="-450,0,0"/>
+      <Panel Width="60%" Height="100%" Alignment="Center" >
+          <PointAttractor ux:Name="centerAttractor" Radius="100" Strength="500" />
       </Panel>
-      <Panel Alignment="CenterRight" Width="50" Height="100%">
-          <Circle ux:Name="leftCircle" Color="#EF5350" />
-          <PointAttractor ux:Name="likedAttractor" Radius="600" Strength="800" Offset="500,0,0"/>
+      <Panel Width="20%" Height="100%" Alignment="CenterRight">
+          <PointAttractor ux:Name="likedAttractor" Radius="350" Strength="800" Offset="250,0,0"/>
       </Panel>
     </Panel>
   
