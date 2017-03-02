@@ -2,114 +2,7 @@
   <Fuse.iOS.StatusBarConfig Style="Dark" />
   <Font File="resources/fonts/computer_pixel.ttf" ux:Global="ComputerPixel" />
 
-  <JavaScript>
-  var Pictures = require('PictureList');
-  var Observable = require("FuseJS/Observable");
-  var RandomCardsSet = Pictures.getList();
-  var CardsArr = [];
-  var Cards = Observable();
-  var cardsAvailableLeft = 0;
-  var currentCardIndex = 0;
-
-  /*CardsArr.onValueChanged(module, function(card){
-    if (!card) return;
-    debug_log("changed " + JSON.stringify(card));
-    //card.active = true;
-  });*/
-
-  function placeCards(quant) {
-    RandomCardsSet.splice(0, quant).map(setUpCards);
-    Cards.replaceAll(CardsArr);
-    cardsAvailableLeft = RandomCardsSet.length;
-  }
-
-  function setUpCards(card){
-    card.active = false;
-    CardsArr.push(card);
-  }
-
-  function refreshCards(card){
-    //CardsArr.removeAt(0);
-    debug_log("refresh: " + JSON.stringify(card));
-
-    Cards.replaceAt(card.index, card)
-    var nextCard = CardsArr[currentCardIndex + 1];
-    if (nextCard) {
-      nextCard.active = true;
-      Cards.replaceAt(nextCard.index, nextCard);
-      currentCardIndex++;
-    }
-
-    debug_log("new: " + JSON.stringify(CardsArr));
-    
-    /*Cards.forEach(function(c, i){
-      debug_log("Cards " + i);
-      c.index = i;
-      if(i === 0) {
-        c.active = true;
-      }
-      return c;
-    });*/
-    //Cards.replaceAll();
-
-    //var nextCard = Cards.getAt(0);
-    /*if(nextCard) {
-      nextCard.active = true;
-      //Cards.replaceAt(nextCard.index, nextCard);
-      debug_log("new: " + JSON.stringify(Cards.getAt(0)));
-    }*/
-
-
-    /*if (currentCounter <= 2) {
-      RandomCardsSet.splice(0, 3).map(setUpCards);
-      if (RandomCardsSet.length === 0){
-        debug_log("Finalizado");
-      } else {
-        currentCounter += 3;
-      }
-    }
-    currentCounter--;*/
-  }
-
-  function isLiked(e) {
-    e.data.liked = true;
-    refreshCards(e.data);
-  }
-
-  function notLiked(e) {
-    debug_log("notLiked");
-    e.data.not_liked = true;
-    refreshCards(e.data);
-  }
-
-  function handleLiked() {
-    var pic = Cards.getAt(0);
-    if (pic) {
-      pic.liked = true;
-      Cards.replaceAt(0, pic);
-    }
-  }
-
-  function handleNotLiked() {
-    var pic = Cards.getAt(0);
-    if (pic) {
-      pic.not_liked = true;
-      Cards.replaceAt(0, pic);
-    }
-  }
-  
-  placeCards(3);
-
-debug_log("----");
-  module.exports = {
-    handleLiked,
-    handleNotLiked,
-    isLiked,
-    notLiked,
-    Cards
-  };
-
-  </JavaScript>
+  <JavaScript File="Main.js"></JavaScript>
   <Text ux:Class="TituloText" Font="ComputerPixel" Alignment="Center" Color="#BEF0E7" FontSize="45" />
   <Grid Rows="1*,6*,1*" Color="#FFF">
     <StackPanel Color="#000" ItemSpacing="-20">
@@ -117,57 +10,72 @@ debug_log("----");
       <TituloText>Generator</TituloText>
     </StackPanel>
 
-    <Panel ux:Name="PicsPanelObj">
-      <Each Items="{Cards}">
-        <Panel Dock="Top" Height="100%" Width="100%">
-          <Deferred>
-            <Panel Alignment="Center">
-                <DockPanel ux:Name="panel" Margin="0" Height="90%" Width="90%">
-                    <Rectangle Layer="Background">
-                        <Stroke Width="5" Offset="2" Color="#CCC"/>
-                    </Rectangle>
-                    <Grid>
-                        <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
-                    </Grid>
-                </DockPanel>
+    <DockPanel ux:Class="CardInner" Margin="0" Height="90%" Width="90%">
+        <Rectangle Layer="Background">
+            <Stroke Width="5" Offset="2" Color="#CCC"/>
+        </Rectangle>
+        <Grid>
+            <Image MaxHeight="100%" StretchMode="Uniform" Dock="Fill" File="{file}" />
+        </Grid>
+    </DockPanel>
 
-                <Draggable Axis="X"/>
+    <Panel>
+      <Panel ux:Name="PicsPanelObj">
+        <Each Items="{Cards}">
+          <Panel Height="100%" Width="100%">
+            <Deferred>
+              <Panel Alignment="Center">
+                  <CardInner></CardInner>
+                  <WhileTrue Value="{liked}">
+                      <Move X="200" Duration="0.3" Easing="QuadraticInOut" />
+                  </WhileTrue>
+                  <WhileTrue Value="{not_liked}">
+                      <Move X="-200" Duration="0.3" Easing="QuadraticInOut" />
+                  </WhileTrue>
 
-                <WhileTrue Value="{liked}">
-                    <Move X="200" Duration="0.3" Easing="QuadraticInOut" />
-                </WhileTrue>
-                <WhileTrue Value="{not_liked}">
-                    <Move X="-200" Duration="0.3" Easing="QuadraticInOut" />
-                </WhileTrue>
+                  <WhileTrue Value="{active}">
+                    <Draggable Axis="X"/>
+                  </WhileTrue>
+                  <WhileDragging>
+                    <BringToFront />
+                    <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
+                  </WhileDragging>
 
-                <WhileDragging>
-                  <BringToFront />
-                  <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
-                </WhileDragging>
+                  <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
+                    <Rotate Degrees="-8" />
+                  </InForceFieldAnimation>
 
-                <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
-                  <Rotate Degrees="-8" />
-                </InForceFieldAnimation>
+                  <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
+                    <Rotate Degrees="8" />
+                  </InForceFieldAnimation>
 
-                <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
-                  <Rotate Degrees="8" />
-                </InForceFieldAnimation>
+                  <EnteredForceField ForceField="likedAttractor" Threshold="0.8"  Handler="{isLiked}" />
+                  <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
+              </Panel>
+          </Deferred>
+          </Panel>
+        </Each>
 
-                <EnteredForceField ForceField="likedAttractor" Threshold="0.8"  Handler="{isLiked}" />
-                <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
-            </Panel>
-        </Deferred>
+        <Panel Width="20%" Height="100%" Alignment="CenterLeft">
+            <PointAttractor ux:Name="notLikedAttractor" Radius="350" Strength="800" Offset="-250,0,0"/>
         </Panel>
-      </Each>
-
-      <Panel Width="20%" Height="100%" Alignment="CenterLeft">
-          <PointAttractor ux:Name="notLikedAttractor" Radius="350" Strength="800" Offset="-250,0,0"/>
+        <Panel Width="60%" Height="100%" Alignment="Center" >
+            <PointAttractor ux:Name="centerAttractor" Radius="100" Strength="500" />
+        </Panel>
+        <Panel Width="20%" Height="100%" Alignment="CenterRight">
+            <PointAttractor ux:Name="likedAttractor" Radius="350" Strength="800" Offset="250,0,0"/>
+        </Panel>
       </Panel>
-      <Panel Width="60%" Height="100%" Alignment="Center" >
-          <PointAttractor ux:Name="centerAttractor" Radius="100" Strength="500" />
-      </Panel>
-      <Panel Width="20%" Height="100%" Alignment="CenterRight">
-          <PointAttractor ux:Name="likedAttractor" Radius="350" Strength="800" Offset="250,0,0"/>
+      <Panel ux:Name="CardsStatic">
+        <Each Items="{CardsArr}">
+          <Panel Dock="Top" Height="100%" Width="100%">
+            <Deferred>
+              <Panel Alignment="Center">
+                <CardInner></CardInner>
+              </Panel>
+          </Deferred>
+          </Panel>
+        </Each>
       </Panel>
     </Panel>
   
