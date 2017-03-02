@@ -1,5 +1,7 @@
 {
-  "RootNamespace":"",
+  "Title": "GxndxrGenerator",
+  "RootNamespace":"picnic.gendergenerator",
+  "Version": "1.0.0",
   "Packages": [
   	"Fuse",
   	"FuseJS",
@@ -8,6 +10,26 @@
     "Fuse.Animations",
     "Fuse.Physics"
   ],
+  "Android": {
+    "Icons": {
+      "LDPI": "resources/icons/res/mipmap-ldpi/icon.png",
+      "MDPI": "resources/icons/res/mipmap-mdpi/icon.png",
+      "HDPI": "resources/icons/res/mipmap-hdpi/icon.png",
+      "XHDPI": "resources/icons/res/mipmap-xhdpi/icon.png",
+      "XXHDPI": "resources/icons/res/mipmap-xxhdpi/icon.png",
+      "XXXHDPI": "resources/icons/res/mipmap-xxxhdpi/icon.png"
+    }
+  },
+  "iOS": {
+    "Icons": {
+      "iPhone_29_2x": "resources/icons/Icon-iPhone-29@2x.png",
+      "iPhone_29_3x": "resources/icons/Icon-iPhone-29@3x.png",
+      "iPhone_40_2x": "resources/icons/Icon-iPhone-40@2x.png",
+      "iPhone_40_3x": "resources/icons/Icon-iPhone-40@3x.png",
+      "iPhone_60_2x": "resources/icons/Icon-iPhone-60@2x.png",
+      "iPhone_60_3x": "resources/icons/Icon-iPhone-60@3x.png"
+    }
+  },
   "Mobile": {
   	"Orientations": "Portrait"
   },

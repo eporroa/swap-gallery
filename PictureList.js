@@ -97,6 +97,8 @@ module.exports = {
     var rand = shuffle(list);
     return rand.filter(function(pic, i){
       rand[i].index = i;
+      rand[i].liked = false;
+      rand[i].not_liked = false;
       return i < 30;
     });
   }

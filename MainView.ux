@@ -20,37 +20,35 @@
     </DockPanel>
 
     <Panel>
-      <Panel ux:Name="PicsPanelObj">
+      <Panel ux:Name="CardDynamic">
         <Each Items="{Cards}">
           <Panel Height="100%" Width="100%">
             <Deferred>
               <Panel Alignment="Center">
-                  <CardInner></CardInner>
-                  <WhileTrue Value="{liked}">
-                      <Move X="200" Duration="0.3" Easing="QuadraticInOut" />
-                  </WhileTrue>
-                  <WhileTrue Value="{not_liked}">
-                      <Move X="-200" Duration="0.3" Easing="QuadraticInOut" />
-                  </WhileTrue>
+                <CardInner></CardInner>
+                <WhileTrue Value="{liked}">
+                    <Move X="200" Duration="0.3" Easing="QuadraticInOut" />
+                </WhileTrue>
+                <WhileTrue Value="{not_liked}">
+                    <Move X="-200" Duration="0.3" Easing="QuadraticInOut" />
+                </WhileTrue>
 
-                  <WhileTrue Value="{active}">
-                    <Draggable Axis="X"/>
-                  </WhileTrue>
-                  <WhileDragging>
-                    <BringToFront />
-                    <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
-                  </WhileDragging>
+                <Draggable Axis="X"/>
+                <WhileDragging>
+                  <BringToFront />
+                  <Scale Factor="1.05" Duration="0.5" Easing="BackOut" />
+                </WhileDragging>
 
-                  <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
-                    <Rotate Degrees="-8" />
-                  </InForceFieldAnimation>
+                <InForceFieldAnimation ForceField="likedAttractor" From="0.01" To="0.2">
+                  <Rotate Degrees="-8" />
+                </InForceFieldAnimation>
 
-                  <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
-                    <Rotate Degrees="8" />
-                  </InForceFieldAnimation>
+                <InForceFieldAnimation ForceField="notLikedAttractor" From="0.01" To="0.2">
+                  <Rotate Degrees="8" />
+                </InForceFieldAnimation>
 
-                  <EnteredForceField ForceField="likedAttractor" Threshold="0.8"  Handler="{isLiked}" />
-                  <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
+                <EnteredForceField ForceField="likedAttractor" Threshold="0.8"  Handler="{isLiked}" />
+                <EnteredForceField ForceField="notLikedAttractor" Threshold="0.8" Handler="{notLiked}" />
               </Panel>
           </Deferred>
           </Panel>
@@ -66,8 +64,8 @@
             <PointAttractor ux:Name="likedAttractor" Radius="350" Strength="800" Offset="250,0,0"/>
         </Panel>
       </Panel>
-      <Panel ux:Name="CardsStatic">
-        <Each Items="{CardsArr}">
+      <Panel ux:Name="CardStatic">
+        <Each Items="{CardsArr}" Limit="1" Offset="{nextCardIndex}">
           <Panel Dock="Top" Height="100%" Width="100%">
             <Deferred>
               <Panel Alignment="Center">
